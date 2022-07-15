@@ -105,6 +105,44 @@ public String getMapping(@RequestParam(value = "name", required = false) String 
 }
 ```
 
+#### @CookieValue
+
+##### @RequestHeader 和 @CookieValue 的关系
+
+@RequestHeader可以将 Request header （请求头）的key-value键值对的value，绑定到controller方法的参数，
+
+@CookieValue 只能将 Request header中关于cookie的值绑定到方法的参数上 ，
+
+即，@RequestHeader 可以传递 key为 cookie ，value为cookie连续键值对，而@CookieValue传递 cookie连续键值对（请求头中key为cookie的 value）
+
+
+
+### 解决获取请求参数的乱码问题
+
+必须在web.xml中进行注册
+
+```xml
+<!--配置springMVC的编码过滤器-->
+<filter>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+        <param-name>encoding</param-name>
+        <param-value>UTF-8</param-value>
+    </init-param>
+    <init-param>
+        <param-name>forceResponseEncoding</param-name>
+        <param-value>true</param-value>
+    </init-param>
+</filter>
+<filter-mapping>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+</filter-mapping>
+```
+
+SpringMVC中处理编码的过滤器一定要配置到其他过滤器之前，否则无效
+
 
 
 ### 遇到的问题

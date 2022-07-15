@@ -30,6 +30,7 @@
             </bean>
         </property>
     </bean>
+
     <mvc:annotation-driven />
     <!--
        处理静态资源，例如html、js、css、jpg
