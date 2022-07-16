@@ -147,6 +147,12 @@ SpringMVC中处理编码的过滤器一定要配置到其他过滤器之前，�
 
 ### 遇到的问题
 
+下载安装tomcat
+
+https://blog.csdn.net/qq_42786253/article/details/106878753
+
+
+
 #### 启动工程后，页面放回404
 
 springmvc配置文件中，没有配置了对@Controller标签的支持
