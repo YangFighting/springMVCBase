@@ -165,11 +165,39 @@ SpringMVC中处理编码的过滤器一定要配置到其他过滤器之前，�
 
 #### 调用doDispatch方法
 
-获取Handler
+##### 获取 HandlerExecutionChain
 
-通过 org.springframework.web.servlet.DispatcherServlet#getHandler 获取 HandlerExecutionChain，得到Controller层的方法
+通过 org.springframework.web.servlet.DispatcherServlet#getHandler 获取 **HandlerExecutionChain**，得到Controller层的方法（**Handler**），处理器拦截器 （**HandlerInterceptor**）
 
-​	
+##### 获取 HandlerAdapter
+
+遍历 `this.handlerAdapters`属性 ，判断Handler是哪种HandlerAdapter，`this.handlerAdapters`属性初始化来自 DispatcherServlet.properties
+
+##### 调用拦截器前置处理方法处理请求方法
+
+HandlerExecutionChain类调用applyPreHandle 方法，调用HandlerInterceptor类的**preHandle方法**，如果有preHandle方法，则返回，否则调用HandlerAdapter类的**handle方法**
+
+[HandlerMapping和HandlerAdapter详解](https://blog.csdn.net/zxd1435513775/article/details/103000992)
+
+**handle方法**通过反射的方式将去调用Controller层的方法，获得**ModelAndView**
+
+##### 渲染模版
+
+DispatcherServlet 类 调用applyDefaultViewName执行 
+
+##### 拦截器的后置处理
+
+HandlerExecutionChain类 调用 applyPostHandle方法调用HandlerInterceptor类调用**postHandle**方法
+
+拦截器的afterCompletion
+
+调用processDispatchResult方法 triggerAfterCompletion，执行 拦截器 的 afterCompletion
+
+[过滤器（Filter）和拦截器（Interceptor）的区别](https://zhuanlan.zhihu.com/p/162730976)
+
+[CharacterEncodingFilter过滤器要放在所有过滤器前面](https://www.cnblogs.com/bear7/p/13562161.html)
+
+[tomcat与springMVC是如何协同工作的](https://zhuanlan.zhihu.com/p/361185535)
 
 
 
