@@ -143,11 +143,41 @@ public String getMapping(@RequestParam(value = "name", required = false) String 
 
 SpringMVC中处理编码的过滤器一定要配置到其他过滤器之前，否则无效
 
+### springmvc执行流程
+
+#### 调用processRequest方法
+
+在 org.springframework.web.servlet.FrameworkServlet#service方法中
+
+判断http方法是 PATCH 或为null
+
+如果是，执行org.springframework.web.servlet.FrameworkServlet#processRequest	
+
+否则执行 javax.servlet.http.HttpServlet#service(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+
+在 javax.servlet.http.HttpServlet#service里，根据请求类型分发， 调用 doGet /doPost等方法，org.springframework.web.servlet.FrameworkServlet重写了HttpServlet 的 doGet 方法，没有调用父的 doGet 方法，而是调用 FrameworkServlet 的 doGet 方法， FrameworkServlet 的 doGet 方法也是**调用FrameworkServlet#processRequest方法**
+
+
+
+#### 调用doService方法
+
+在FrameworkServlet#processRequest方法，调用 FrameworkServlet#doService方法，在FrameworkServlet中 doService 方法是抽象方法，所以我们要找它实现类，也就是org.springframework.web.servlet.DispatcherServlet#doService，DispatcherServlet 类 在web.xml 文件引入，继承FrameworkServlet
+
+#### 调用doDispatch方法
+
+获取Handler
+
+通过 org.springframework.web.servlet.DispatcherServlet#getHandler 获取 HandlerExecutionChain，得到Controller层的方法
+
+​	
+
+
+
 
 
 ### 遇到的问题
 
-下载安装tomcat
+#### 下载安装tomcat
 
 https://blog.csdn.net/qq_42786253/article/details/106878753
 
