@@ -203,6 +203,127 @@ HandlerExecutionChain类 调用 applyPostHandle方法调用HandlerInterceptor类
 
 
 
+### 处理POST请求
+
+#### multipart/form-data
+
+处理 文件和text，需要在spring的配置文件中添加**CommonsMultipartResolver**，同时在maven中添加 **commons-fileupload**
+
+```xml
+<!--必须通过文件解析器的解析才能将文件转换为MultipartFile对象-->
+<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
+```
+
+```xml
+<!-- https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload -->
+<dependency>
+    <groupId>commons-fileupload</groupId>
+    <artifactId>commons-fileupload</artifactId>
+    <version>1.4</version>
+</dependency>
+```
+
+可以通过**@RequestParam** 来指定**参数名称**
+
+```java
+@PostMapping("/postUser")
+@ResponseBody
+public String postUser(
+    @RequestParam(name="file",required = false) MultipartFile file, 
+    String name) {
+    // 解析 Content-Type为 multipart/form-data 的 POST请求, 需要配置 commons-fileupload
+    // curl -L -X POST 'http://localhost:8080/helloWorld/postUser' -H 'Content-Type: multipart/form-data' -F 'name=xixi' -F 'file=test.xlsx'
+
+    // 参数key名
+    String keyName = file.getName();
+    logger.warn("keyName: " + keyName);
+    // 文件名
+    String fileName = file.getOriginalFilename();
+
+    logger.warn("name: " + name);
+    String msg = MessageFormat.format("postUser: {0}", fileName);
+    logger.warn(msg);
+    return msg;
+}
+```
+
+##### 处理多个相同名称的 文件和text
+
+入参使用相对应的**数组**来接收请求
+
+```java
+@PostMapping(value = "/postUser/files", headers = "content-type=multipart/form-data")
+@ResponseBody
+public String postUserFiles(@RequestParam(name="file",required = false) MultipartFile[] multipartFiles,
+                            @RequestParam(name="name") String[] name) {
+    // 解析 Content-Type为 multipart/form-data 的 POST请求, 需要配置 commons-fileupload
+    // curl -L -X POST 'http://localhost:8080/helloWorld/postUser/files' -H 'Content-Type: multipart/form-data' -F 'name=xixi' -F 'file=@a.xlsx' -F 'file=@b.docx'
+
+    for (MultipartFile file :
+         multipartFiles) {
+        // 参数key名
+        String keyName = file.getName();
+        logger.warn("keyName: " + keyName);
+        // 文件名
+        String fileName = file.getOriginalFilename();
+        logger.warn("fileName: " + fileName);
+    }
+
+
+    logger.warn("name: " + Arrays.toString(name));
+    String msg = MessageFormat.format("postUser: {0}", Arrays.toString(name));
+    logger.warn(msg);
+    return msg;
+}
+```
+
+
+
+#### application/x-www-form-urlencoded
+
+@PostMapping 默认接收的就是 application/x-www-form-urlencoded格式的请求
+
+通过**@RequestParam** 来指定**参数名称**，同时**@RequestParam** 还可以解析 url上的键值对
+
+```java
+@PostMapping(value = "/postUserFormUrlEncoded", headers = "content-type=application/x-www-form-urlencoded")
+@ResponseBody
+public String postUserFormUrlEncoded(@RequestParam(name="name") String name) {
+    // 解析 Content-Type为 application/x-www-form-urlencoded 的 POST请求
+    //curl -L -X POST 'http://localhost:8080/helloWorld/postUserFormUrlEncoded' -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'name=zz'
+    
+    // curl -L -X POST 'http://localhost:8080/helloWorld/postUserFormUrlEncoded?name=12' -H 'Content-Type: application/x-www-form-urlencoded' --data-urlencode 'name=zz'
+        
+    logger.warn("name: " + name);
+    String msg = MessageFormat.format("postUserFormUrlEncoded: {0}", name);
+    logger.warn(msg);
+    return msg;
+}
+```
+
+#### JSON
+
+使用 @RequestBody  来接收 JSON的数据
+
+```java
+@DeleteMapping("/delUser")
+@ResponseBody
+public String delUser(@RequestBody String reqBoy) {
+    // curl -L -X DELETE 'http://localhost:8080/helloWorld/delUser' --data-raw '{
+    //    "test": 1
+    //}'
+    String msg = MessageFormat.format("delUser: {0}", reqBoy);
+    logger.warn(msg);
+    return msg;
+}
+```
+
+
+
+[不同POST请求类型的区别](https://www.cnblogs.com/ifindu-san/p/8251370.html)
+
+
+
 ### 遇到的问题
 
 #### 下载安装tomcat
@@ -224,3 +345,35 @@ springmvc配置文件中，没有配置了对@Controller标签的支持
  log4j2和log4j是一个作者，只不过log4j2是重新架构的一款日志组件，他抛弃了之前log4j的不足，以及吸取了优秀的logback的设计重新推出的一款新组件。
 
 [Log4j和Log4j2的区别](https://www.cnblogs.com/KylinBlog/p/7841217.html)
+
+
+
+#### @ResponseBody注解返回中文乱码
+
+ Response header 的Content-Type  默认是 ISO-8859-1，设置成 utf-8
+
+在spring的配置文件中，配置StringHttpMessageConverter
+
+```xml
+<!-- 必须放在<mvc:annotation-driven>之前 -->
+<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+    <property name="messageConverters">
+        <list>
+            <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <value>text/plain;charset=UTF-8</value>
+                        <value>text/html;charset=UTF-8</value>
+                        <value>applicaiton/javascript;charset=UTF-8</value>
+                    </list>
+                </property>
+            </bean>
+
+
+        </list>
+    </property>
+</bean>
+
+```
+
+https://blog.csdn.net/cckevincyh/article/details/81227864

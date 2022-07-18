@@ -30,6 +30,24 @@
             </bean>
         </property>
     </bean>
+    <!-- 必须放在<mvc:annotation-driven>之前 -->
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+        <property name="messageConverters">
+            <list>
+                <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+                    <property name="supportedMediaTypes">
+                        <list>
+                            <value>text/plain;charset=UTF-8</value>
+                            <value>text/html;charset=UTF-8</value>
+                            <value>applicaiton/javascript;charset=UTF-8</value>
+                        </list>
+                    </property>
+                </bean>
+
+
+            </list>
+        </property>
+    </bean>
 
     <mvc:annotation-driven />
     <!--
@@ -38,5 +56,8 @@
       此时必须设置<mvc:annotation-driven/>解决问题
      -->
     <mvc:default-servlet-handler/>
+
+    <!--必须通过文件解析器的解析才能将文件转换为MultipartFile对象-->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
 
 </beans>
