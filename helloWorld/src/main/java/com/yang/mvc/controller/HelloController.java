@@ -113,5 +113,12 @@ public class HelloController {
         return msg;
     }
 
+    @GetMapping("/testInterceptor")
+    @ResponseBody
+    public String testInterceptor() {
+        logger.warn("testInterceptor");
+        return "testInterceptor";
+    }
+
 
 }

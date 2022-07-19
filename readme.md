@@ -181,17 +181,21 @@ HandlerExecutionChain类调用applyPreHandle 方法，调用HandlerInterceptor�
 
 **handle方法**通过反射的方式将去调用Controller层的方法，获得**ModelAndView**
 
-##### 渲染模版
 
-DispatcherServlet 类 调用applyDefaultViewName执行 
 
 ##### 拦截器的后置处理
 
 HandlerExecutionChain类 调用 applyPostHandle方法调用HandlerInterceptor类调用**postHandle**方法
 
-拦截器的afterCompletion
+##### 处理模型数据和渲染视图
 
-调用processDispatchResult方法 triggerAfterCompletion，执行 拦截器 的 afterCompletion
+org.springframework.web.servlet.DispatcherServlet#**processDispatchResult**方法中，**render**方法去渲染视图
+
+
+
+##### 拦截器的afterCompletion
+
+无论是否异常都会 调用processDispatchResult方法 triggerAfterCompletion，执行 **拦截器 的 afterCompletion**
 
 [过滤器（Filter）和拦截器（Interceptor）的区别](https://zhuanlan.zhihu.com/p/162730976)
 
@@ -321,6 +325,109 @@ public String delUser(@RequestBody String reqBoy) {
 
 
 [不同POST请求类型的区别](https://www.cnblogs.com/ifindu-san/p/8251370.html)
+
+
+
+### 拦截器
+
+#### 创建拦截器
+
+需要实现HandlerInterceptor接口
+
+```java
+
+public class FirstInterceptor implements HandlerInterceptor {
+
+    private static final Logger logger = LogManager.getLogger(FirstInterceptor.class);
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        logger.warn(" ---- preHandle ---- ");
+        return true;
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        logger.warn(" ---- postHandle ---- ");
+
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        logger.warn(" ---- afterCompletion ---- ");
+
+    }
+}
+```
+
+三个抽象方法
+
+**preHandle**：控制器方法执行之前执行preHandle()，其boolean类型的返回值表示是否拦截或放行，返回true为放行，即调用控制器方法；返回false表示拦截，即不调用控制器方法
+
+**postHandle**：控制器方法执行之后执行postHandle()
+
+**afterComplation**：处理完视图和模型数据，渲染视图完毕之后执行afterComplation()
+
+#### 配置拦截器
+
+第一种方式
+
+```xml
+<!-- 配置 拦截器 -->
+<mvc:interceptors>
+    <bean class="com.yang.mvc.interceptor.FirstInterceptor"/>
+</mvc:interceptors>
+```
+
+以上方式拦截所有的请求
+
+第二种方式
+
+拦截器使用 @Component 注解注入Bean
+
+```java
+@Component
+```
+
+spring配置文件开启扫描，使用ref 配置Bean
+
+```xml
+<context:component-scan base-package="com.yang.mvc.*"/>
+
+<mvc:interceptors>
+    <ref bean="firstInterceptor"/>
+</mvc:interceptors>
+```
+
+以上方式拦截所有的请求
+
+第三种方式
+
+```xml
+<mvc:interceptors>
+    <mvc:interceptor>
+        <mvc:mapping path="/**"/>
+        <mvc:exclude-mapping path="/testInterceptor"/>
+        <ref bean="firstInterceptor"/>
+    </mvc:interceptor>
+</mvc:interceptors>
+```
+
+以上方式通过mvc:mapping设置需要拦截的请求，通过mvc:exclude-mapping设置需要排除的请求，即不需要拦截的请求
+
+#### 多个拦截器的执行顺序
+
+- 若每个拦截器的preHandle()都返回true
+
+  此时多个拦截器的执行顺序和拦截器在SpringMVC的配置文件的配置顺序有关：
+
+  preHandle()会按照配置的顺序执行，而postHandle()和afterComplation()会按照配置的反序执行
+
+- 若某个拦截器的preHandle()返回了false
+
+  preHandle()返回false和它之前的拦截器的preHandle()都会执行，postHandle()都不执行，返回false的拦截器之前的拦截器的afterComplation()会执行
+
+### 异常处理器
 
 
 
